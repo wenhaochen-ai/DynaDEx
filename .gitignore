@@ -1,0 +1,11 @@
+# Release allowlist: code, documentation, dependencies, and the overview figure.
+# External datasets, schemas, experiment configs, models, and outputs stay local.
+*
+!/.gitignore
+!/README.md
+!/requirements.txt
+!/DynaDEx_overview.png
+!/src/
+!/src/*.py
+!/preprocessing/
+!/preprocessing/*.py
