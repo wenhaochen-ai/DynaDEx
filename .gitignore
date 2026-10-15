@@ -8,8 +8,6 @@
 !/src/*.py
 !/preprocessing/
 !/preprocessing/*.py
-!/.gitattributes
-!/pyproject.toml
 !/schemas/
 !/schemas/*.json
 !/schemas/*.md
