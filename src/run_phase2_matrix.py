@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 MAIN_SEEDS = (42, 101, 202)
 BUDGETS = (100, 250, 500, 1000, 2000, 3000)
 RHO_VALUES = (0.01, 0.05, 0.10, 0.20)
@@ -31,16 +30,8 @@ def jobs_for_mode(mode: str) -> list[tuple[str, int, float, float]]:
         return [("main", 2000, 0.05, 0.20)]
     if mode == "budget":
         return [("budget", budget, 0.05, 0.20) for budget in BUDGETS]
-    jobs = [
-        ("rho", budget, rho, 0.50)
-        for budget in (1000, 2000)
-        for rho in RHO_VALUES
-    ]
-    jobs.extend(
-        ("alpha", budget, 0.05, alpha)
-        for budget in (1000, 2000)
-        for alpha in ALPHA_VALUES
-    )
+    jobs = [("rho", budget, rho, 0.50) for budget in (1000, 2000) for rho in RHO_VALUES]
+    jobs.extend(("alpha", budget, 0.05, alpha) for budget in (1000, 2000) for alpha in ALPHA_VALUES)
     unique: dict[tuple[int, float, float], tuple[str, int, float, float]] = {}
     for job in jobs:
         key = (job[1], job[2], job[3])
@@ -53,6 +44,7 @@ def main() -> None:
     parser.add_argument("--config", type=Path, default=Path("configs/experiment_paths.json"))
     parser.add_argument("--mode", choices=("main", "budget", "gro"), default="main")
     parser.add_argument("--seeds", default="")
+    parser.add_argument("--sampling-seed", type=int, default=42)
     parser.add_argument("--datasets", default="")
     parser.add_argument("--output-root", type=Path, default=Path("outputs/phase2_matrix"))
     args, passthrough = parser.parse_known_args()
@@ -76,9 +68,7 @@ def main() -> None:
         dev_file = resolve(config_base, str(dataset_config[dataset]["dev"]))
         for sweep, budget, rho, alpha in jobs_for_mode(args.mode):
             for seed in seeds:
-                run_name = (
-                    f"{dataset}_{sweep}_n{budget}_rho{rho:g}_alpha{alpha:g}_seed{seed}"
-                )
+                run_name = f"{dataset}_{sweep}_n{budget}_rho{rho:g}_alpha{alpha:g}_seed{seed}"
                 output_dir = args.output_root / run_name
                 command = [
                     sys.executable,
@@ -102,6 +92,8 @@ def main() -> None:
                     str(alpha),
                     "--seed",
                     str(seed),
+                    "--sampling-seed",
+                    str(args.sampling_seed),
                     *passthrough,
                 ]
                 print(f"Running {run_name}")

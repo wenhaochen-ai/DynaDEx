@@ -1,7 +1,7 @@
 # DynaDEx: Transferable Definition-Conditioned Extraction with Dynamic Schemas
 
 ![Python](https://img.shields.io/badge/Python-3.12-green)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.9.0-orange)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.8.0-orange)
 
 This repository contains the implementation of **DynaDEx** for anonymous review.
 
@@ -24,6 +24,8 @@ DynaDEx conditions a language model on natural-language schema definitions to ex
 ```text
 .
 |-- preprocessing/             # Data conversion and instruction construction
+|-- schemas/                   # Task label definitions
+|-- configs/                   # Label mappings and experiment paths
 |-- src/
 |   |-- modeling_dynadex.py    # Backbone and schema mapper
 |   |-- data.py
@@ -41,7 +43,7 @@ DynaDEx conditions a language model on natural-language schema definitions to ex
 `-- README.md
 ```
 
-Datasets, schemas, label mappings, and model checkpoints are supplied externally.
+Schema definitions and example configurations are included. Datasets and model checkpoints are supplied externally.
 
 ## Setup
 
@@ -68,12 +70,12 @@ python -m preprocessing.prepare_datasets \
   --output /path/to/processed/cpb1_train.json
 ```
 
-Build source training instructions using an external schema:
+Build source training instructions using the provided schema:
 
 ```bash
 python -m preprocessing.build_instructions \
   --input /path/to/processed/cpb1_train.json \
-  --schema /path/to/schemas/cpb1_schema.json \
+  --schema schemas/cpb1.json \
   --output /path/to/processed/cpb1_train_ins.jsonl \
   --augment-definitions --shuffle-schema --seed 42
 ```
@@ -102,7 +104,7 @@ python -m src.train_phase2 \
   --train-file /path/to/processed/target_train_ins.jsonl \
   --dev-file /path/to/processed/target_dev_ins.jsonl \
   --output-dir outputs/phase2/target \
-  --maximum-train-samples 2000 \
+  --maximum-train-samples 2000 --sampling-seed 42 \
   --epochs 3 --learning-rate 2e-5 \
   --per-device-batch-size 4 --gradient-accumulation-steps 16 \
   --rho 0.05 --alpha 0.20 \
@@ -124,12 +126,12 @@ python -m src.inference \
 python -m src.evaluate \
   --gold /path/to/processed/target_test.json \
   --predictions results/target_predictions.json \
-  --mode pair --output results/target_metrics.json
+  --mode auto --output results/target_metrics.json
 ```
 
 Omit `--phase2-checkpoint` for zero-shot target transfer with the Phase 1 model.
 
-Evaluation reports micro precision, recall, and F1. `pair` requires exact label and span-text matches after trimming surrounding whitespace. `srl` additionally requires an exact predicate-text match and expects one predicate instance per record. Matching is case-sensitive; scores use a 0–1 scale.
+Evaluation reports micro precision, recall, and F1 using exact span coordinates. `auto` selects label–span or given-predicate argument matching from the record type; scores use a 0–1 scale. Use `python -m src.evaluate export --help` for native export and `python -m src.evaluate official --help` for benchmark scoring.
 
 ### Additional Experiments
 

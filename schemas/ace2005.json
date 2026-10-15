@@ -1,0 +1,65 @@
+[
+    {
+        "role": "FAC",
+        "def": [
+            "Facility",
+            "Functional structures, buildings, and other real estate improvements created by humans.",
+            "设施",
+            "人类建造的具有特定功能的建筑物、基础设施或其他不动产。"
+        ]
+    },
+    {
+        "role": "GPE",
+        "def": [
+            "Geo-Political Entity",
+            "Composite entities comprised of a population, a government, a physical location, and a political boundary.",
+            "地缘政治实体",
+            "由人口、政府、物理边界和政治区划组成的复合实体（如国家、省份、城市等）。"
+        ]
+    },
+    {
+        "role": "LOC",
+        "def": [
+            "Location",
+            "Natural geographical areas, water bodies, and other physical locations not defined by political boundaries.",
+            "地点/位置",
+            "自然地理区域、水体以及其他非政治边界划分的物理位置。"
+        ]
+    },
+    {
+        "role": "ORG",
+        "def": [
+            "Organization",
+            "A corporate, governmental, or other non-demographic group of people established for a specific purpose.",
+            "组织机构",
+            "为特定目的而成立的企业、政府机构或其他具有特定结构的人群团体。"
+        ]
+    },
+    {
+        "role": "PER",
+        "def": [
+            "Person",
+            "Individual humans or a group of humans treated as a distinct entity.",
+            "人物",
+            "独立的人类个体或被视为单一实体的人群。"
+        ]
+    },
+    {
+        "role": "VEH",
+        "def": [
+            "Vehicle",
+            "Physical devices designed primarily to move, carry, or transport people or objects.",
+            "交通工具",
+            "主要用于移动、搭载或运输人员及物品的物理设备。"
+        ]
+    },
+    {
+        "role": "WEA",
+        "def": [
+            "Weapon",
+            "Physical devices primarily used as instruments for physically harming or destroying targets.",
+            "武器",
+            "主要用作对目标造成物理伤害或破坏的物理设备。"
+        ]
+    }
+]

@@ -15,7 +15,7 @@ def main() -> None:
     parser.add_argument("--canonical", type=Path, default=Path("results/canonical.json"))
     parser.add_argument("--syntactic", type=Path, default=Path("results/syntactic.json"))
     parser.add_argument("--lexical", type=Path, default=Path("results/lexical.json"))
-    parser.add_argument("--mode", choices=("pair", "srl"), default="pair")
+    parser.add_argument("--mode", choices=("auto", "pair", "srl"), default="auto")
     parser.add_argument("--output", type=Path, default=Path("results/rephrasing_metrics.json"))
     args = parser.parse_args()
 

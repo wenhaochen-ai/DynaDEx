@@ -1,0 +1,26 @@
+{
+  "base_model": "Qwen/Qwen3-8B",
+  "phase1_checkpoint": "../outputs/phase1",
+  "datasets": {
+    "ace2005": {
+      "train": "../data/processed/ace2005_train_ins.jsonl",
+      "dev": "../data/processed/ace2005_dev_ins.jsonl"
+    },
+    "fabner": {
+      "train": "../data/processed/fabner_train_ins.jsonl",
+      "dev": "../data/processed/fabner_dev_ins.jsonl"
+    },
+    "fire": {
+      "train": "../data/processed/fire_train_ins.jsonl",
+      "dev": "../data/processed/fire_dev_ins.jsonl"
+    },
+    "phee": {
+      "train": "../data/processed/phee_train_ins.jsonl",
+      "dev": "../data/processed/phee_dev_ins.jsonl"
+    },
+    "framenet17": {
+      "train": "../data/processed/framenet17_train_ins.jsonl",
+      "dev": "../data/processed/framenet17_dev_ins.jsonl"
+    }
+  }
+}

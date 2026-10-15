@@ -9,8 +9,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from .common import read_records, write_jsonl
-
+from .common import format_pairs, read_records, validate_annotation, write_jsonl
 
 META_INSTRUCTION = (
     "You are DynaDEx, a schema-conditioned extraction system. Given an input "
@@ -23,6 +22,7 @@ Execution Steps:
 1. Read each schema label and its definition.
 2. Identify every text span that satisfies a provided definition.
 3. Return each valid label-span pair once.
+Escape literal parentheses and backslashes inside span text with a backslash.
 Output Format: (Role Label, Text Span).
 Demonstration:
 Sample Input: Steve Jobs is the founder of Apple.
@@ -52,7 +52,10 @@ class SchemaRepository:
 
         if "role" in payload[0]:
             self.flat = [
-                (str(item["role"]), normalize_definitions(item.get("def")))
+                (
+                    "PRED" if item["role"] == "rel" else str(item["role"]),
+                    normalize_definitions(item.get("def")),
+                )
                 for item in payload
             ]
             return
@@ -64,10 +67,16 @@ class SchemaRepository:
             if not lexical_unit or not frame:
                 continue
             entries = [
-                (str(role["role"]), normalize_definitions(role.get("def")))
+                (
+                    "PRED" if role["role"] == "rel" else str(role["role"]),
+                    normalize_definitions(role.get("def")),
+                )
                 for role in item.get("schema", [])
                 if role.get("role")
             ]
+            existing = self.by_key.get((lexical_unit, frame))
+            if existing is not None and existing != entries:
+                raise ValueError("Conflicting schema entries for the same lexical unit and frame")
             self.by_key[(lexical_unit, frame)] = entries
             self.by_frame[frame].append(entries)
             self.by_lexical_unit[lexical_unit].append(entries)
@@ -83,15 +92,13 @@ class SchemaRepository:
         frame = str(
             meta.get(
                 "frame",
-                record.get("frame", meta.get("predicate_sense", record.get("predicate_sense", ""))),
+                record.get("frame", ""),
             )
         )
         if (lexical_unit, frame) in self.by_key:
             return list(self.by_key[(lexical_unit, frame)])
         if frame and len(self.by_frame.get(frame, [])) == 1:
             return list(self.by_frame[frame][0])
-        if lexical_unit and len(self.by_lexical_unit.get(lexical_unit, [])) == 1:
-            return list(self.by_lexical_unit[lexical_unit][0])
         raise KeyError(
             f"No unique predicate-indexed schema for record {record.get('id', '<unknown>')}"
         )
@@ -116,23 +123,40 @@ def choose_entries(
     return selected
 
 
-def build_prompt(sentence: str, entries: list[dict[str, str]]) -> str:
+def build_prompt(
+    sentence: str,
+    entries: list[dict[str, str]],
+    predicate: dict[str, Any] | None = None,
+) -> str:
     """Render the prompt specification shared by every execution regime."""
     schema_lines = "\n".join(
-        f"- Label: {entry['label']} | Definition: {entry['definition']}"
-        for entry in entries
+        f"- Label: {entry['label']} | Definition: {entry['definition']}" for entry in entries
     )
+    target = ""
+    if predicate is not None:
+        target = (
+            "[Target Predicate]\n"
+            + json.dumps(
+                {
+                    key: predicate[key]
+                    for key in ("text", "start", "end", "segments")
+                    if key in predicate
+                },
+                ensure_ascii=False,
+            )
+            + "\nExtract arguments relative to this predicate. Character intervals are zero-based and end-exclusive.\n"
+        )
     return (
         f"[Meta Instruction]\n{META_INSTRUCTION}\n"
         f"[Task]\n{TASK_INSTRUCTION}\n"
         f"[Schema Definitions]\n<schema>\n{schema_lines}\n</schema>\n"
-        f"[Input Sentence]\n{sentence}\n[Response]\n"
+        f"{target}[Input Sentence]\n{sentence}\n[Response]\n"
     )
 
 
 def format_output(roles: list[list[str]]) -> str:
     """Serialize gold label-span pairs using the common output grammar."""
-    return " ".join(f"({label}, {span})" for label, span in roles)
+    return format_pairs(roles)
 
 
 def build_rows(
@@ -145,16 +169,33 @@ def build_rows(
     """Create instruction rows with synchronized textual and latent definitions."""
     rows: list[dict[str, Any]] = []
     for index, record in enumerate(records):
+        if "annotations" not in record or "sentence_id" not in record:
+            raise ValueError("Build instructions from coordinate-preserving normalized records")
         rng = random.Random(seed + index)
-        entries = choose_entries(
-            repository.resolve(record), rng, augment_definitions, shuffle_schema
-        )
+        resolved = repository.resolve(record)
+        if record.get("predicate") is not None and not any(
+            label == "PRED" for label, _ in resolved
+        ):
+            resolved.append(("PRED", ["The supplied target predicate in the input sentence."]))
+        entries = choose_entries(resolved, rng, augment_definitions, shuffle_schema)
+        labels = [entry["label"] for entry in entries]
+        if len(labels) != len(set(labels)):
+            raise ValueError("Schema labels must be unique within each instance")
         sentence = str(record["sentence"])
-        roles = [[str(role[0]), str(role[1])] for role in record.get("roles", [])]
+        annotations = sorted(
+            record["annotations"], key=lambda a: (a["start"], a["end"], a["label"])
+        )
+        for annotation in annotations:
+            validate_annotation(annotation, record)
+            if annotation["label"] not in labels:
+                raise ValueError(f"Schema is missing annotation label {annotation['label']!r}")
+        unique = {(a["label"], a["start"], a["end"]): a for a in annotations}
+        roles = [[a["label"], a["text"]] for a in unique.values()]
         rows.append(
             {
+                **record,
                 "id": str(record.get("id", f"record-{index:08d}")),
-                "instruction": build_prompt(sentence, entries),
+                "instruction": build_prompt(sentence, entries, record.get("predicate")),
                 "output": format_output(roles),
                 "sentence": sentence,
                 "roles": roles,

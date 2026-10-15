@@ -7,7 +7,7 @@ from pathlib import Path
 
 from transformers import AutoTokenizer, Trainer, TrainingArguments
 
-from .checkpointing import save_bundle
+from .checkpointing import file_sha256, save_bundle
 from .data import DynaDExCollator, DynaDExDataset
 from .modeling_dynadex import DynaDExModel
 from .training_common import configure_reproducibility, parse_dtype
@@ -16,8 +16,12 @@ from .training_common import configure_reproducibility, parse_dtype
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-model", default="Qwen/Qwen3-8B")
-    parser.add_argument("--train-file", type=Path, default=Path("data/processed/cpb1/cpb1_train_ins.jsonl"))
-    parser.add_argument("--dev-file", type=Path, default=Path("data/processed/cpb1/cpb1_dev_ins.jsonl"))
+    parser.add_argument(
+        "--train-file", type=Path, default=Path("data/processed/cpb1/cpb1_train_ins.jsonl")
+    )
+    parser.add_argument(
+        "--dev-file", type=Path, default=Path("data/processed/cpb1/cpb1_dev_ins.jsonl")
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/phase1"))
     parser.add_argument("--epochs", type=float, default=2.0)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
@@ -60,6 +64,7 @@ def main() -> None:
         maximum_length=args.maximum_length,
         seed=args.seed,
         use_schema_mapper=use_schema_mapper,
+        latent_length=args.latent_length,
     )
     dev_dataset = DynaDExDataset(
         args.dev_file,
@@ -67,6 +72,7 @@ def main() -> None:
         maximum_length=args.maximum_length,
         seed=args.seed,
         use_schema_mapper=use_schema_mapper,
+        latent_length=args.latent_length,
     )
     training_args = TrainingArguments(
         output_dir=str(args.output_dir),
@@ -107,6 +113,11 @@ def main() -> None:
             "latent_length": args.latent_length,
             "schema_mapper": use_schema_mapper,
             "seed": args.seed,
+            "epochs": args.epochs,
+            "learning_rate": args.learning_rate,
+            "maximum_length": args.maximum_length,
+            "train_file_sha256": file_sha256(args.train_file),
+            "dev_file_sha256": file_sha256(args.dev_file),
         },
     )
 

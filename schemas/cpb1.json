@@ -1,0 +1,173 @@
+[
+  {
+    "role": "rel",
+    "def": [
+      "surface string of the verb",
+      "The predicate or main verb of the proposition",
+      "谓词 / 核心动词",
+      "动词的表层形式（用于触发语义关系的词）"
+    ]
+  },
+  {
+    "role": "ARG0",
+    "def": [
+      "agent",
+      "Proto-Agent, the causer or initiator of the action",
+      "施事者",
+      "动作的执行者或引发者"
+    ]
+  },
+  {
+    "role": "ARG1",
+    "def": [
+      "patient",
+      "Proto-Patient, the entity undergoing the action or the theme",
+      "受事者 /以此为主题",
+      "动作的承受者或被影响的对象"
+    ]
+  },
+  {
+    "role": "ARG2",
+    "def": [
+      "instrument, benefactive, attribute",
+      "Verb-specific secondary argument (often instrument, extent, or purpose)",
+      "工具 / 受益者 / 属性（具体取决于动词框架）",
+      "次要论元（通常指代动作的工具、幅度或特定的补充信息）"
+    ]
+  },
+  {
+    "role": "ARG3",
+    "def": [
+      "starting point, benefactive, attribute",
+      "Verb-specific argument (often starting point or source)",
+      "起点 / 受益者 / 属性",
+      "动作的起始状态、来源或特定动词定义的论元"
+    ]
+  },
+  {
+    "role": "ARG4",
+    "def": [
+      "ending point",
+      "Verb-specific argument (often ending point or goal)",
+      "终点 / 目标",
+      "动作的结束状态、去向或最终目标"
+    ]
+  },
+  {
+    "role": "ARGM-ADV",
+    "def": [
+      "adverbial, default tag",
+      "General-purpose adverbial modifier for unspecified context",
+      "一般状语 / 默认标记",
+      "无法归类于特定类型的其他修饰语"
+    ]
+  },
+  {
+    "role": "ARGM-BNF",
+    "def": [
+      "beneficiary",
+      "The entity that benefits from the action",
+      "受益者状语",
+      "动作的获益对象或为了谁而做"
+    ]
+  },
+  {
+    "role": "ARGM-CND",
+    "def": [
+      "conditional",
+      "The condition under which the action takes place",
+      "条件状语",
+      "动作发生的前提条件"
+    ]
+  },
+  {
+    "role": "ARGM-DIR",
+    "def": [
+      "directional",
+      "The path or direction of the motion",
+      "方向状语",
+      "动作的路径或移动方向"
+    ]
+  },
+  {
+    "role": "ARGM-DIS",
+    "def": [
+      "discourse",
+      "Discourse markers that connect sentences or segments",
+      "语篇标记 / 话语标记",
+      "连接上下文的词（如‘然而’、‘因此’等）"
+    ]
+  },
+  {
+    "role": "ARGM-DGR",
+    "def": [
+      "degree",
+      "The degree or intensity of the action (rare, often covered by EXT)",
+      "程度状语",
+      "动作的剧烈程度或等级"
+    ]
+  },
+  {
+    "role": "ARGM-EXT",
+    "def": [
+      "extent",
+      "The magnitude, range, or amount of change",
+      "范围状语 / 幅度",
+      "动作涉及的规模、量级或改变的幅度"
+    ]
+  },
+  {
+    "role": "ARGM-FRQ",
+    "def": [
+      "frequency",
+      "How often the action occurs",
+      "频率状语",
+      "动作发生的频次或周期"
+    ]
+  },
+  {
+    "role": "ARGM-LOC",
+    "def": [
+      "location",
+      "The place where the action occurs",
+      "地点状语",
+      "动作发生的具体场所或位置"
+    ]
+  },
+  {
+    "role": "ARGM-MNR",
+    "def": [
+      "manner",
+      "The way or method in which the action is performed",
+      "方式状语",
+      "动作进行的方式、手段或风格"
+    ]
+  },
+  {
+    "role": "ARGM-PRP",
+    "def": [
+      "purpose and reason",
+      "The motivation or cause for the action",
+      "目的状语 / 原因状语",
+      "动作背后的动机、意图或理由"
+    ]
+  },
+  {
+    "role": "ARGM-TMP",
+    "def": [
+      "temporal",
+      "The time at which the action occurs",
+      "时间状语",
+      "动作发生的时间点或时间段"
+    ]
+  },
+  {
+    "role": "ARGM-TPC",
+    "def": [
+      "topic",
+      "The topic or theme under discussion",
+      "主题状语",
+      "讨论的话题或涉及的主题"
+    ]
+  }
+]

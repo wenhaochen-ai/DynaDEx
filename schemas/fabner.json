@@ -1,0 +1,110 @@
+[
+  {
+    "role": "APPL",
+    "def": [
+      "The target industry or field where the manufactured product is used",
+      "Specific applications in sectors like aerospace, automotive, or medical",
+      "制造产品所应用的具体行业或使用场景",
+      "产品在航空航天、汽车、制药或医疗等行业的具体应用范畴"
+    ]
+  },
+  {
+    "role": "BIOP",
+    "def": [
+      "Biological or medical entities related to bio-manufacturing",
+      "Biomedical materials or anatomical structures like bones, tendons, or scaffolds",
+      "与生物制造或医学工程直接相关的生物学实体",
+      "如骨小梁、组织支架、淀粉、肌腱等生物医用材料或解剖结构"
+    ]
+  },
+  {
+    "role": "CHAR",
+    "def": [
+      "Techniques and methods used for measuring or analyzing material properties",
+      "Evaluation processes like CT scans or X-ray diffraction",
+      "用于测量、分析或表征材料特性的技术和手段",
+      "如CT扫描、X射线衍射等材料性能评估和实验检测过程"
+    ]
+  },
+  {
+    "role": "CONPRI",
+    "def": [
+      "Theoretical concepts, models, or overarching principles in manufacturing discipline",
+      "Abstract engineering theories such as friction models or the concept of Smart Manufacturing",
+      "制造学科中的理论模型、科学原理或宏观指导概念",
+      "如摩擦磨损理论、智能制造等抽象理念和学术规律"
+    ]
+  },
+  {
+    "role": "ENAT",
+    "def": [
+      "Foundational software or technologies supporting modern manufacturing",
+      "Digital concept and systematic enablers like CAD, blockchain, or communication protocols",
+      "支持和赋能现代智能制造业的底层软件或信息技术",
+      "如计算机辅助设计(CAD)、区块链或通信协议(OPC/UA)等数字化支撑技术"
+    ]
+  },
+  {
+    "role": "FEAT",
+    "def": [
+      "Geometric or structural engineering features of a manufactured part",
+      "Physical traits or design characteristics like slots, fillets, or extrusions",
+      "制造零件的几何外貌或结构工程特征",
+      "产品设计上的物理特征，如切口、挤压特征、槽孔或圆角"
+    ]
+  },
+  {
+    "role": "MATE",
+    "def": [
+      "Substances or materials used in manufacturing, such as stainless steel or titanium alloy",
+      "Raw material components used to produce goods",
+      "用于制造物品的物理物质或材料，例如不锈钢或钛合金",
+      "生产加工过程中使用的基础原材料"
+    ]
+  },
+  {
+    "role": "MACEQ",
+    "def": [
+      "Tools, instruments, or heavy machinery used during production",
+      "Mechanical devices and equipment like CNC machines, lathes, or sensors",
+      "生产过程中使用的机器设备、工具或测量仪器",
+      "如车床、数控机床或传感器等具体的机械生产装置"
+    ]
+  },
+  {
+    "role": "MANP",
+    "def": [
+      "Methods and processes used to manufacture products, like forming or joining",
+      "The specific operational process applied in manufacturing",
+      "用于制造产品的工艺和方法，如增材制造、成型或焊接",
+      "生产加工过程中使用的具体工艺步骤或制造技术"
+    ]
+  },
+  {
+    "role": "MANS",
+    "def": [
+      "Established norms, file formats, or standardized classifications in engineering",
+      "Industry-recognized specifications like ISO, ASTM, or STL/STEP formats",
+      "工程设计和制造中公认的法律规范、文件格式或标准化分类体系",
+      "如ISO分类、ASTM标准或STEP、STL等常用的工业规范与通用格式"
+    ]
+  },
+  {
+    "role": "PARA",
+    "def": [
+      "Quantitative variables and settings governing a manufacturing process",
+      "Operating conditions like cutting speed, laser power, or spindle speed",
+      "控制机器操作和制造过程的定量变量或运行设置",
+      "如切削速度、主轴转速、激光功率或材料去除率等工艺操作参数"
+    ]
+  },
+  {
+    "role": "PRO",
+    "def": [
+      "Physical or mechanical characteristics of a material, such as hardness or yield strength",
+      "Properties describing how a material behaves under load or environment",
+      "材料或产品的物理和机械性能指标",
+      "描述材料在受力或特定环境下表现出特性的指标，如耐腐蚀性、屈服强度或硬度"
+    ]
+  }
+]

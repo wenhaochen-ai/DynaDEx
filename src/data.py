@@ -1,15 +1,64 @@
-"""Training dataset and collator for synchronized DynaDEx instructions."""
+"""SCIM schema encoding, training datasets, and batch collation."""
 
 from __future__ import annotations
 
 import json
-import random
 from pathlib import Path
 from typing import Any
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
+
+from preprocessing.sampling import select_sentences
+
+SCHEMA_ENCODING = "label-definition-v1"
+
+
+def encode_entries(entries: list[dict[str, str]], tokenizer: Any) -> dict[str, torch.Tensor]:
+    if not entries:
+        raise ValueError("Every schema must contain at least one entry")
+    rows = []
+    for entry in entries:
+        label, definition = entry["label"], entry["definition"]
+        if (
+            not isinstance(label, str)
+            or not label
+            or not isinstance(definition, str)
+            or not definition
+        ):
+            raise ValueError("Schema labels and definitions must be non-empty strings")
+        # Tokenize each part separately so Eq. (3) averages exactly |r|+|d| tokens.
+        ids = tokenizer(label, add_special_tokens=False)["input_ids"]
+        ids += tokenizer(definition, add_special_tokens=False)["input_ids"]
+        if not ids:
+            raise ValueError(f"Schema entry {label!r} has no tokens")
+        rows.append(ids)
+    length = max(map(len, rows))
+    ids = torch.full((len(rows), length), int(tokenizer.pad_token_id), dtype=torch.long)
+    mask = torch.zeros_like(ids)
+    for index, row in enumerate(rows):
+        ids[index, : len(row)] = torch.tensor(row, dtype=torch.long)
+        mask[index, : len(row)] = 1
+    return {"input_ids": ids, "attention_mask": mask}
+
+
+def encode_schema_batch(
+    rows: list[dict[str, Any]],
+    tokenizer: Any,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    encoded = [encode_entries(row.get("schema_entries", []), tokenizer) for row in rows]
+    roles = max(item["input_ids"].shape[0] for item in encoded)
+    length = max(item["input_ids"].shape[1] for item in encoded)
+    ids = torch.full((len(rows), roles, length), int(tokenizer.pad_token_id), dtype=torch.long)
+    mask = torch.zeros_like(ids)
+    role_mask = torch.zeros((len(rows), roles), dtype=torch.long)
+    for index, item in enumerate(encoded):
+        count, width = item["input_ids"].shape
+        ids[index, :count, :width] = item["input_ids"]
+        mask[index, :count, :width] = item["attention_mask"]
+        role_mask[index, :count] = 1
+    return ids, mask, role_mask
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -29,12 +78,8 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 def select_sentence_subset(
     records: list[dict[str, Any]], maximum_samples: int | None, seed: int
 ) -> list[dict[str, Any]]:
-    """Sample complete records without replacement using a fixed seed."""
-    if maximum_samples is None or maximum_samples <= 0 or maximum_samples >= len(records):
-        return records
-    indices = list(range(len(records)))
-    random.Random(seed).shuffle(indices)
-    return [records[index] for index in sorted(indices[:maximum_samples])]
+    """Sample complete source sentences, retaining every predicate instance."""
+    return select_sentences(records, maximum_samples, seed)
 
 
 class DynaDExDataset(Dataset):
@@ -45,16 +90,16 @@ class DynaDExDataset(Dataset):
         path: Path,
         tokenizer: Any,
         maximum_length: int = 2048,
-        maximum_definition_length: int = 64,
         maximum_samples: int | None = None,
         seed: int = 42,
         use_schema_mapper: bool = True,
+        latent_length: int = 10,
     ) -> None:
         self.records = select_sentence_subset(read_jsonl(path), maximum_samples, seed)
         self.tokenizer = tokenizer
         self.maximum_length = maximum_length
-        self.maximum_definition_length = maximum_definition_length
         self.use_schema_mapper = use_schema_mapper
+        self.latent_length = latent_length
 
     def __len__(self) -> int:
         return len(self.records)
@@ -66,7 +111,8 @@ class DynaDExDataset(Dataset):
         eos_token = self.tokenizer.eos_token or ""
         prompt_ids = self.tokenizer(prompt, add_special_tokens=False)["input_ids"]
         output_ids = self.tokenizer(output + eos_token, add_special_tokens=False)["input_ids"]
-        if len(prompt_ids) + len(output_ids) > self.maximum_length:
+        prefix_length = self.latent_length if self.use_schema_mapper else 0
+        if len(prompt_ids) + len(output_ids) + prefix_length > self.maximum_length:
             raise ValueError(
                 f"Record {item.get('id', index)} has {len(prompt_ids) + len(output_ids)} "
                 f"tokens, exceeding the configured limit of {self.maximum_length}"
@@ -85,15 +131,7 @@ class DynaDExDataset(Dataset):
         entries = item.get("schema_entries", [])
         if not entries:
             raise ValueError(f"Record {item.get('id', index)} has no schema entries")
-        definitions = [str(entry["definition"]) for entry in entries]
-        encoded = self.tokenizer(
-            definitions,
-            add_special_tokens=False,
-            padding="max_length",
-            truncation=True,
-            max_length=self.maximum_definition_length,
-            return_tensors="pt",
-        )
+        encoded = encode_entries(entries, self.tokenizer)
         result["schema_input_ids"] = encoded["input_ids"]
         result["schema_attention_mask"] = encoded["attention_mask"]
         return result
@@ -121,14 +159,18 @@ class DynaDExCollator:
         )
         result = {
             "input_ids": input_ids,
-            "attention_mask": input_ids.ne(self.pad_token_id).long(),
+            "attention_mask": pad_sequence(
+                [item["attention_mask"] for item in batch],
+                batch_first=True,
+                padding_value=0,
+            ),
             "labels": labels,
         }
         if not self.use_schema_mapper:
             return result
 
         maximum_roles = max(item["schema_input_ids"].shape[0] for item in batch)
-        definition_length = batch[0]["schema_input_ids"].shape[1]
+        definition_length = max(item["schema_input_ids"].shape[1] for item in batch)
         schema_ids = torch.full(
             (len(batch), maximum_roles, definition_length),
             self.pad_token_id,
@@ -138,8 +180,9 @@ class DynaDExCollator:
         role_mask = torch.zeros((len(batch), maximum_roles), dtype=torch.long)
         for row_index, item in enumerate(batch):
             role_count = item["schema_input_ids"].shape[0]
-            schema_ids[row_index, :role_count] = item["schema_input_ids"]
-            schema_mask[row_index, :role_count] = item["schema_attention_mask"]
+            width = item["schema_input_ids"].shape[1]
+            schema_ids[row_index, :role_count, :width] = item["schema_input_ids"]
+            schema_mask[row_index, :role_count, :width] = item["schema_attention_mask"]
             role_mask[row_index, :role_count] = 1
         result.update(
             {

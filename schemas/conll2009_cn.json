@@ -1,0 +1,191 @@
+[
+  {
+    "role": "rel",
+    "def": [
+      "surface string of the verb",
+      "The predicate or main lexical unit triggering the semantic relations",
+      "谓词 / 核心动词",
+      "动词的表层形式（语义关系的触发词）"
+    ]
+  },
+  {
+    "role": "A0",
+    "def": [
+      "agent",
+      "Proto-Agent, the causer, initiator, or experiencer of the action",
+      "施事者 / 动作发起者",
+      "执行动作的主体或引发事件的原因"
+    ]
+  },
+  {
+    "role": "A1",
+    "def": [
+      "patient",
+      "Proto-Patient, the entity undergoing the action or the theme",
+      "受事者 / 动作对象",
+      "动作的承受者、被影响的实体或处于某种状态的主体"
+    ]
+  },
+  {
+    "role": "A2",
+    "def": [
+      "instrument, benefactive, attribute",
+      "Verb-specific secondary argument (often instrument, extent, or purpose)",
+      "间接对象 / 工具 / 属性（视动词框架而定）",
+      "动作涉及的工具、幅度或特定的次要论元"
+    ]
+  },
+  {
+    "role": "A3",
+    "def": [
+      "starting point, benefactive, attribute",
+      "Verb-specific argument (often source or starting point)",
+      "起点 / 来源 / 受益者（视动词框架而定）",
+      "动作的起始状态、来源地或特定动词定义的论元"
+    ]
+  },
+  {
+    "role": "A4",
+    "def": [
+      "ending point",
+      "Verb-specific argument (often goal or end state)",
+      "终点 / 目标",
+      "动作的结束位置、去向或最终达成的状态"
+    ]
+  },
+  {
+    "role": "C-A0",
+    "def": [
+      "continuative agent",
+      "The continuation of a split or discontinuous A0 argument",
+      "延续性施事 / 不连续施事部分",
+      "被动词或其他成分隔断的A0论元的剩余部分"
+    ]
+  },
+  {
+    "role": "C-A1",
+    "def": [
+      "continuative patient",
+      "The continuation of a split or discontinuous A1 argument",
+      "延续性受事 / 不连续受事部分",
+      "被动词或其他成分隔断的A1论元的剩余部分（常见于话题化句式或倒装结构）"
+    ]
+  },
+  {
+    "role": "ADV",
+    "def": [
+      "adverbial, default tag",
+      "General-purpose modifier for unspecified adverbials not covered by other tags",
+      "一般状语 / 默认标记",
+      "无法归类于特定类型的其他杂项修饰语"
+    ]
+  },
+  {
+    "role": "BNF",
+    "def": [
+      "beneficiary",
+      "The entity that benefits from the action",
+      "受益者状语",
+      "动作的获益对象或为了谁而做"
+    ]
+  },
+  {
+    "role": "CND",
+    "def": [
+      "conditional",
+      "The condition under which the action takes place",
+      "条件状语",
+      "动作发生的前提、假设或条件"
+    ]
+  },
+  {
+    "role": "DIR",
+    "def": [
+      "directional",
+      "The path or trajectory of the motion",
+      "方向状语 / 路径",
+      "动作移动的方向、路径或轨迹"
+    ]
+  },
+  {
+    "role": "DIS",
+    "def": [
+      "discourse",
+      "Discourse markers that connect sentences or segments",
+      "语篇标记 / 话语标记",
+      "连接上下文的词（如‘然而’、‘因此’、‘比如’等）"
+    ]
+  },
+  {
+    "role": "DGR",
+    "def": [
+      "degree",
+      "The intensity or level of the action (often merged with EXT in some schemas)",
+      "程度状语",
+      "动作的剧烈程度或等级"
+    ]
+  },
+  {
+    "role": "EXT",
+    "def": [
+      "extent",
+      "The magnitude, range, or amount of change",
+      "范围状语 / 幅度",
+      "动作涉及的规模、量级或改变的幅度"
+    ]
+  },
+  {
+    "role": "FRQ",
+    "def": [
+      "frequency",
+      "How often the action occurs",
+      "频率状语",
+      "动作发生的频次或周期"
+    ]
+  },
+  {
+    "role": "LOC",
+    "def": [
+      "location",
+      "The spatial setting where the action occurs",
+      "地点状语 / 处所",
+      "动作发生的具体场所或空间环境"
+    ]
+  },
+  {
+    "role": "MNR",
+    "def": [
+      "manner",
+      "The method or way in which the action is performed",
+      "方式状语",
+      "动作进行的方式、手段、风格或途径"
+    ]
+  },
+  {
+    "role": "PRP",
+    "def": [
+      "purpose and reason",
+      "The motivation or cause driving the action",
+      "目的状语 / 原因状语",
+      "动作背后的动机、意图或引发动作的理由"
+    ]
+  },
+  {
+    "role": "TMP",
+    "def": [
+      "temporal",
+      "The time at which the action occurs",
+      "时间状语",
+      "动作发生的时间点、时刻或持续时长"
+    ]
+  },
+  {
+    "role": "TPC",
+    "def": [
+      "topic",
+      "The subject matter or theme under discussion",
+      "主题状语 / 话题",
+      "动作所涉及的讨论对象或领域"
+    ]
+  }
+]

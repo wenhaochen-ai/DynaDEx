@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import random
 from pathlib import Path
 
-from .common import read_records, write_jsonl
-
+from .common import read_records, write_json, write_jsonl
+from .sampling import select_sentences, subset_manifest
 
 DEFAULT_BUDGETS = (100, 250, 500, 1000, 2000, 3000)
 
@@ -33,13 +32,13 @@ def main() -> None:
         raise ValueError(f"No records found in {args.input}")
 
     for seed in args.seeds:
-        order = list(range(len(records)))
-        random.Random(seed).shuffle(order)
         for requested_budget in sorted(set(args.budgets)):
-            actual_budget = min(requested_budget, len(records))
-            selected = [records[index] for index in order[:actual_budget]]
+            selected = select_sentences(records, requested_budget, seed)
+            manifest = subset_manifest(selected, seed, requested_budget)
+            actual_budget = manifest["actual_sentences"]
             output = args.output_dir / f"seed_{seed}" / f"train_n{actual_budget}.jsonl"
             write_jsonl(output, selected)
+            write_json(output.with_suffix(".manifest.json"), manifest)
             print(
                 f"seed={seed} requested={requested_budget} actual={actual_budget} output={output}"
             )

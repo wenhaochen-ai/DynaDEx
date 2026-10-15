@@ -1,0 +1,119 @@
+[
+  {
+    "role": "Action",
+    "def": [
+      "An activity or event representing a financial transaction or market occurrence",
+      "A verb or event describing transactional or corporate actions",
+      "表示金融市场中发生的具体行为或事件",
+      "体现公司或市场层面交易、变动的动作性实体"
+    ]
+  },
+  {
+    "role": "BusinessUnit",
+    "def": [
+      "A functional unit, department, or operational entity within a company",
+      "An internal organizational unit or operational division of a company",
+      "公司内部的职能部门或业务单元",
+      "企业中承担特定职责的组织或资产单元"
+    ]
+  },
+  {
+    "role": "Company",
+    "def": [
+      "The name of a registered company or commercial brand",
+      "A corporate or brand entity acting as an economic participant",
+      "依法注册的公司或商业品牌名称",
+      "在商业或金融语境中作为主体的企业实体"
+    ]
+  },
+  {
+    "role": "Date",
+    "def": [
+      "A specific or relative point in time or time period",
+      "A temporal expression indicating when an event occurs",
+      "用于描述事件发生时间的时间实体",
+      "明确或隐含的时间点或时间区间"
+    ]
+  },
+  {
+    "role": "Designation",
+    "def": [
+      "A role, title, or capacity held by an entity in a corporate or financial context",
+      "A title or role defining an entity’s function or responsibility",
+      "公司或交易中承担的身份、职位或角色",
+      "用于刻画个人或组织功能定位的角色实体"
+    ]
+  },
+  {
+    "role": "FinancialEntity",
+    "def": [
+      "A quantifiable financial item such as assets, revenue, or liabilities",
+      "A monetary or value-based financial object",
+      "具有金融属性、可计量的财务对象",
+      "在财务分析中作为数值载体的实体"
+    ]
+  },
+  {
+    "role": "GeopoliticalEntity",
+    "def": [
+      "A country or politically defined region",
+      "A politically recognized territorial entity",
+      "国家或具有政治属性的区域实体",
+      "在国际或政治语境下使用的地理单元"
+    ]
+  },
+  {
+    "role": "Location",
+    "def": [
+      "A physical or geographical location excluding political regions",
+      "A non-political geographical place or area",
+      "非政治意义上的地理位置或空间实体",
+      "用于描述事件发生地点的空间位置"
+    ]
+  },
+  {
+    "role": "Money",
+    "def": [
+      "A monetary value expressed in a specific currency",
+      "A currency-denominated financial amount",
+      "以货币形式表示的金额数值",
+      "涉及具体币种的金融数额实体"
+    ]
+  },
+  {
+    "role": "Person",
+    "def": [
+      "The name of an individual person",
+      "A named human individual",
+      "具体自然人的姓名实体",
+      "在文本中出现的个人身份指代"
+    ]
+  },
+  {
+    "role": "Product",
+    "def": [
+      "A product or service offered by a company",
+      "A tangible or intangible offering provided to customers",
+      "企业向市场提供的产品或服务",
+      "具有消费或使用属性的商品实体"
+    ]
+  },
+  {
+    "role": "Quantity",
+    "def": [
+      "A numeric value or measurement not expressed as money",
+      "A numerical or measurable quantity",
+      "不涉及货币的数值或计量单位",
+      "用于描述规模、比例或数量的实体"
+    ]
+  },
+  {
+    "role": "Sector",
+    "def": [
+      "An economic or business domain where companies operate",
+      "A business or industry classification",
+      "企业所属的行业或经济领域",
+      "用于描述商业活动范围的产业实体"
+    ]
+  }
+]

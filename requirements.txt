@@ -1,11 +1,9 @@
-# Suggested environment: Python 3.12 and a CUDA-compatible PyTorch build.
-# These versions follow the supplied project environment; full training validation
-# requires externally supplied datasets and a model checkpoint.
+# Training environment: Python 3.12 and CUDA 12.8.
 accelerate==1.12.0
 huggingface-hub==0.36.0
 numpy==2.2.6
 peft==0.18.0
 safetensors==0.7.0
 tokenizers==0.22.1
-torch==2.9.0
+torch==2.8.0
 transformers==4.57.3

@@ -7,7 +7,10 @@ from pathlib import Path
 
 from transformers import AutoTokenizer, Trainer, TrainingArguments
 
-from .checkpointing import build_phase2_model, save_bundle
+from preprocessing.common import write_json
+from preprocessing.sampling import subset_manifest
+
+from .checkpointing import build_phase2_model, file_sha256, save_bundle
 from .data import DynaDExCollator, DynaDExDataset
 from .training_common import GROTrainer, configure_reproducibility, parse_dtype
 
@@ -16,8 +19,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-model", default="Qwen/Qwen3-8B")
     parser.add_argument("--phase1-checkpoint", type=Path, default=Path("outputs/phase1"))
-    parser.add_argument("--train-file", type=Path, default=Path("data/processed/target/train_ins.jsonl"))
-    parser.add_argument("--dev-file", type=Path, default=Path("data/processed/target/dev_ins.jsonl"))
+    parser.add_argument(
+        "--train-file", type=Path, default=Path("data/processed/target/train_ins.jsonl")
+    )
+    parser.add_argument(
+        "--dev-file", type=Path, default=Path("data/processed/target/dev_ins.jsonl")
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/phase2"))
     parser.add_argument("--epochs", type=float, default=3.0)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
@@ -31,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--alpha", type=float, default=0.20)
     parser.add_argument("--gamma", type=float, default=1e-12)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--sampling-seed", type=int, default=42)
     parser.add_argument("--dtype", choices=("bfloat16", "float16", "float32"), default="bfloat16")
     parser.add_argument("--without-gro", action="store_true")
     parser.add_argument("--without-schema-mapper", action="store_true")
@@ -65,8 +73,9 @@ def main() -> None:
         tokenizer,
         maximum_length=args.maximum_length,
         maximum_samples=maximum_samples,
-        seed=args.seed,
+        seed=args.sampling_seed,
         use_schema_mapper=use_schema_mapper,
+        latent_length=args.latent_length,
     )
     dev_dataset = DynaDExDataset(
         args.dev_file,
@@ -74,7 +83,10 @@ def main() -> None:
         maximum_length=args.maximum_length,
         seed=args.seed,
         use_schema_mapper=use_schema_mapper,
+        latent_length=args.latent_length,
     )
+    manifest = subset_manifest(train_dataset.records, args.sampling_seed, maximum_samples)
+    write_json(args.output_dir / "training_subset.json", manifest)
     training_args = TrainingArguments(
         output_dir=str(args.output_dir),
         num_train_epochs=args.epochs,
@@ -128,6 +140,14 @@ def main() -> None:
             "gamma": None if args.without_gro else args.gamma,
             "maximum_train_samples": maximum_samples,
             "seed": args.seed,
+            "sampling_seed": args.sampling_seed,
+            "subset_sha256": manifest["sentence_ids_sha256"],
+            "actual_train_sentences": manifest["actual_sentences"],
+            "epochs": args.epochs,
+            "learning_rate": args.learning_rate,
+            "maximum_length": args.maximum_length,
+            "train_file_sha256": file_sha256(args.train_file),
+            "dev_file_sha256": file_sha256(args.dev_file),
         },
     )
 

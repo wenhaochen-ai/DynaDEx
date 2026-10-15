@@ -11,6 +11,8 @@ from typing import Any
 
 import torch
 
+from preprocessing.common import sentence_group
+
 from .data import read_jsonl
 from .inference import generate_batch, load_runtime
 from .training_common import configure_reproducibility
@@ -35,34 +37,24 @@ def measure_configuration(
         args.device,
     )
     warmup_rows = rows[: args.warmup_sentences]
-    measured_rows = rows[
-        args.warmup_sentences : args.warmup_sentences + args.measured_sentences
-    ]
+    measured_rows = rows[args.warmup_sentences : args.warmup_sentences + args.measured_sentences]
     if len(measured_rows) < args.measured_sentences:
         raise ValueError("The input file does not contain enough test sentences")
 
     for row in warmup_rows:
-        generate_batch(
-            [row], tokenizer, model, args.maximum_prompt_length, 64, 64
-        )
+        generate_batch([row], tokenizer, model, args.maximum_prompt_length, 64, 64)
     if torch.cuda.is_available():
         torch.cuda.synchronize()
         torch.cuda.reset_peak_memory_stats()
 
     start = time.perf_counter()
     for row in measured_rows:
-        generate_batch(
-            [row], tokenizer, model, args.maximum_prompt_length, 64, 64
-        )
+        generate_batch([row], tokenizer, model, args.maximum_prompt_length, 64, 64)
     if torch.cuda.is_available():
         torch.cuda.synchronize()
     elapsed = time.perf_counter() - start
-    allocated = (
-        torch.cuda.max_memory_allocated() / (1024**3) if torch.cuda.is_available() else 0.0
-    )
-    reserved = (
-        torch.cuda.max_memory_reserved() / (1024**3) if torch.cuda.is_available() else 0.0
-    )
+    allocated = torch.cuda.max_memory_allocated() / (1024**3) if torch.cuda.is_available() else 0.0
+    reserved = torch.cuda.max_memory_reserved() / (1024**3) if torch.cuda.is_available() else 0.0
     del model, tokenizer
     gc.collect()
     if torch.cuda.is_available():
@@ -80,7 +72,9 @@ def main() -> None:
     parser.add_argument("--input", type=Path, default=Path("data/processed/test_ins.jsonl"))
     parser.add_argument("--full-phase1-checkpoint", type=Path, default=Path("outputs/full/phase1"))
     parser.add_argument("--full-phase2-checkpoint", type=Path, default=None)
-    parser.add_argument("--ablated-phase1-checkpoint", type=Path, default=Path("outputs/ablated/phase1"))
+    parser.add_argument(
+        "--ablated-phase1-checkpoint", type=Path, default=Path("outputs/ablated/phase1")
+    )
     parser.add_argument("--ablated-phase2-checkpoint", type=Path, default=None)
     parser.add_argument("--ablated-with-schema-mapper", action="store_true")
     parser.add_argument("--output", type=Path, default=Path("results/inference_efficiency.json"))
@@ -92,9 +86,16 @@ def main() -> None:
     parser.add_argument("--dtype", choices=("bfloat16", "float16", "float32"), default="bfloat16")
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
+    if args.warmup_sentences < 0 or args.measured_sentences <= 0:
+        parser.error("Warm-up count must be non-negative and measurement count positive")
 
     configure_reproducibility(args.seed)
     rows = read_jsonl(args.input)
+    # Each measured input represents a different source sentence.
+    unique_rows = {}
+    for row in rows:
+        unique_rows.setdefault(sentence_group(row), row)
+    rows = list(unique_rows.values())
     full = measure_configuration(
         rows,
         args.base_model,
@@ -119,12 +120,9 @@ def main() -> None:
         },
         "full": full,
         "ablated": ablated,
-        "latency_ratio": full["latency_ms_per_sentence"]
-        / ablated["latency_ms_per_sentence"],
-        "allocated_overhead_gb": full["peak_allocated_gb"]
-        - ablated["peak_allocated_gb"],
-        "reserved_overhead_gb": full["peak_reserved_gb"]
-        - ablated["peak_reserved_gb"],
+        "latency_ratio": full["latency_ms_per_sentence"] / ablated["latency_ms_per_sentence"],
+        "allocated_overhead_gb": full["peak_allocated_gb"] - ablated["peak_allocated_gb"],
+        "reserved_overhead_gb": full["peak_reserved_gb"] - ablated["peak_reserved_gb"],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

@@ -1,0 +1,173 @@
+[
+  {
+    "role": "rel",
+    "def": [
+      "predicate",
+      "The predicate or main verb representing the core event or relation of the proposition",
+      "谓词 / 核心动词",
+      "命题的谓词或核心动词，通常代表具体的事件或关系"
+    ]
+  },
+  {
+    "role": "ARG0",
+    "def": [
+      "agent",
+      "Proto-Agent, the causer, initiator, or experiencer of the action",
+      "施事 / 典型施事",
+      "动作的执行者、引发者或经验者"
+    ]
+  },
+  {
+    "role": "ARG1",
+    "def": [
+      "patient / theme",
+      "Proto-Patient, the entity undergoing the action, experiencing a change of state, or the theme",
+      "受事 / 主题",
+      "动作的承受者、经历状态改变的实体或事件的主题"
+    ]
+  },
+  {
+    "role": "ARG2",
+    "def": [
+      "verb-specific argument 2",
+      "Secondary argument specific to the verb frame (often instrument, benefactive, attribute, or end state)",
+      "核心论元2（依动词框架而定）",
+      "动词特定的次要论元（常见为工具、受益者、属性或终态等）"
+    ]
+  },
+  {
+    "role": "ARG3",
+    "def": [
+      "verb-specific argument 3",
+      "Tertiary argument specific to the verb frame (often starting point, source, or benefactive)",
+      "核心论元3（依动词框架而定）",
+      "动词特定的第三论元（常见为起点、来源或受益者等）"
+    ]
+  },
+  {
+    "role": "ARG4",
+    "def": [
+      "verb-specific argument 4",
+      "Quaternary argument specific to the verb frame (often ending point, destination, or goal)",
+      "核心论元4（依动词框架而定）",
+      "动词特定的第四论元（常见为终点、目的地或最终目标等）"
+    ]
+  },
+  {
+    "role": "ARGM-ADV",
+    "def": [
+      "adverbial modifier",
+      "General-purpose adverbial modifier that cannot be classified into more specific categories",
+      "一般状语 / 默认状语",
+      "无法归类于其他特定类型的一般性副词修饰语或状语"
+    ]
+  },
+  {
+    "role": "ARGM-BNF",
+    "def": [
+      "beneficiary modifier",
+      "The entity that benefits from or is affected by the action",
+      "受益者状语",
+      "动作的获益对象，或动作是为了谁而执行的"
+    ]
+  },
+  {
+    "role": "ARGM-DGR",
+    "def": [
+      "degree modifier",
+      "The degree or intensity of the action or state",
+      "程度状语",
+      "动作或状态的剧烈程度、等级或深浅"
+    ]
+  },
+  {
+    "role": "ARGM-DIR",
+    "def": [
+      "directional modifier",
+      "The path, trajectory, or direction of motion",
+      "方向状语",
+      "动作的移动路径、轨迹或空间方向"
+    ]
+  },
+  {
+    "role": "ARGM-DIS",
+    "def": [
+      "discourse marker",
+      "Markers that connect sentences, clauses, or indicate discourse structure",
+      "语篇标记",
+      "连接上下文、句子或标示语篇结构的词语（如连词、语气词等）"
+    ]
+  },
+  {
+    "role": "ARGM-EXT",
+    "def": [
+      "extent modifier",
+      "The spatial or numerical magnitude, range, or amount of change",
+      "范围 / 幅度状语",
+      "动作涉及的规模、空间跨度或数值改变的幅度"
+    ]
+  },
+  {
+    "role": "ARGM-FRQ",
+    "def": [
+      "frequency modifier",
+      "The frequency or repetition rate of the action",
+      "频率状语",
+      "动作发生的频次、周期或重复率"
+    ]
+  },
+  {
+    "role": "ARGM-LOC",
+    "def": [
+      "locative modifier",
+      "The specific place or spatial context where the event occurs",
+      "地点 / 处所状语",
+      "事件发生的具体空间位置或处所"
+    ]
+  },
+  {
+    "role": "ARGM-MNR",
+    "def": [
+      "manner modifier",
+      "The way, method, or stylistic manner in which the action is performed",
+      "方式状语",
+      "动作执行的方式、手段或状态特征"
+    ]
+  },
+  {
+    "role": "ARGM-PRD",
+    "def": [
+      "secondary predication",
+      "An adjunct that adds a secondary predication or attribute to a core argument",
+      "次级谓语 / 谓语性修饰",
+      "为句子中的核心论元提供补充性谓词描述或属性说明的修饰成分"
+    ]
+  },
+  {
+    "role": "ARGM-PRP",
+    "def": [
+      "purpose or reason modifier",
+      "The motivation, cause, or intended purpose behind the action",
+      "目的 / 原因状语",
+      "动作背后的动机、意图或导致事件发生的原因"
+    ]
+  },
+  {
+    "role": "ARGM-TMP",
+    "def": [
+      "temporal modifier",
+      "The specific time, duration, or temporal context of the event",
+      "时间状语",
+      "事件发生的时间点、时间段或时间背景"
+    ]
+  },
+  {
+    "role": "ARGM-TPC",
+    "def": [
+      "topic modifier",
+      "The topic, theme, or informational focus being discussed",
+      "主题状语",
+      "语境中讨论的话题、焦点或设定的主题范围"
+    ]
+  }
+]

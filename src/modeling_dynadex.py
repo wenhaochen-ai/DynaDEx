@@ -9,7 +9,6 @@ import torch.nn as nn
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import AutoModelForCausalLM
 
-
 LORA_TARGET_MODULES = (
     "q_proj",
     "k_proj",
@@ -55,6 +54,8 @@ class SchemaMapper(nn.Module):
 class DynaDExModel(nn.Module):
     """Combine a causal LLM with continuous schema-conditioned context."""
 
+    accepts_loss_kwargs = False
+
     def __init__(
         self,
         language_model: nn.Module,
@@ -64,10 +65,15 @@ class DynaDExModel(nn.Module):
         super().__init__()
         self.language_model = language_model
         self.hidden_size = int(language_model.config.hidden_size)
+        if latent_length <= 0:
+            raise ValueError("Latent length must be positive")
         self.schema_mapper = (
             SchemaMapper(self.hidden_size, latent_length) if use_schema_mapper else None
         )
         self.language_model.config.use_cache = False
+        if self.schema_mapper is not None:
+            embedding = language_model.get_input_embeddings().weight
+            self.schema_mapper.to(device=embedding.device, dtype=embedding.dtype)
 
     @classmethod
     def from_pretrained(
@@ -78,7 +84,7 @@ class DynaDExModel(nn.Module):
         add_lora: bool = False,
         torch_dtype: torch.dtype = torch.bfloat16,
         trust_remote_code: bool = True,
-    ) -> "DynaDExModel":
+    ) -> DynaDExModel:
         """Load a backbone and optionally attach a trainable LoRA adapter."""
         language_model = AutoModelForCausalLM.from_pretrained(
             base_model,
@@ -99,6 +105,7 @@ class DynaDExModel(nn.Module):
 
     def gradient_checkpointing_enable(self, **kwargs: Any) -> None:
         self.language_model.gradient_checkpointing_enable(**kwargs)
+        self.language_model.enable_input_require_grads()
 
     def _latent_prefix(
         self,
@@ -115,6 +122,7 @@ class DynaDExModel(nn.Module):
 
         with torch.no_grad():
             token_embeddings = embedding_layer(schema_input_ids)
+            token_embeddings = token_embeddings.float()
             token_mask = schema_attention_mask.unsqueeze(-1).to(token_embeddings.dtype)
             token_count = token_mask.sum(dim=2).clamp_min(1.0)
             role_embeddings = (token_embeddings * token_mask).sum(dim=2) / token_count
@@ -240,10 +248,10 @@ class DynaDExModel(nn.Module):
         pad_embedding = embedding_layer(
             torch.tensor([pad_token_id], dtype=input_ids.dtype, device=device)
         )[0]
-        combined_embeddings = pad_embedding.view(1, 1, -1).expand(
-            input_ids.shape[0], maximum_length, -1
-        ).clone()
-        for row_index, (row, row_ids) in enumerate(zip(rows, id_rows)):
+        combined_embeddings = (
+            pad_embedding.view(1, 1, -1).expand(input_ids.shape[0], maximum_length, -1).clone()
+        )
+        for row_index, (row, row_ids) in enumerate(zip(rows, id_rows, strict=False)):
             start = maximum_length - row.shape[0]
             combined_embeddings[row_index, start:] = row
             pad_ids[row_index, start:] = row_ids

@@ -4,78 +4,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import torch
 from transformers import AutoTokenizer
 
+from preprocessing.common import ground_pairs, parse_pairs
+
 from .checkpointing import load_phase1_model, load_phase2_model
-from .data import read_jsonl
+from .data import encode_schema_batch, read_jsonl
 from .modeling_dynadex import DynaDExModel
 from .training_common import configure_reproducibility, parse_dtype
-
-
-PAIR_PATTERN = re.compile(r"\(\s*([^,()]+?)\s*,\s*([^()]+?)\s*\)")
-THINK_PATTERN = re.compile(r"<think>.*?</think>", flags=re.DOTALL | re.IGNORECASE)
-
-
-def parse_response(
-    response: str,
-    allowed_labels: set[str],
-    sentence: str,
-) -> list[list[str]]:
-    """Parse valid, unique label-span pairs in generation order."""
-    cleaned = THINK_PATTERN.sub("", response)
-    if "</think>" in cleaned:
-        cleaned = cleaned.split("</think>", 1)[1]
-    pairs: list[list[str]] = []
-    seen: set[tuple[str, str]] = set()
-    for match in PAIR_PATTERN.finditer(cleaned):
-        label = match.group(1).strip()
-        span = match.group(2).strip()
-        pair = (label, span)
-        if label not in allowed_labels or not span or span not in sentence or pair in seen:
-            continue
-        pairs.append([label, span])
-        seen.add(pair)
-    return pairs
-
-
-def encode_schema_batch(
-    rows: list[dict[str, Any]],
-    tokenizer: Any,
-    maximum_definition_length: int = 64,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Tokenize variable-size schemas and pad the role dimension."""
-    maximum_roles = max(len(row.get("schema_entries", [])) for row in rows)
-    if maximum_roles == 0:
-        raise ValueError("Every row must contain at least one schema entry")
-    schema_ids = torch.full(
-        (len(rows), maximum_roles, maximum_definition_length),
-        int(tokenizer.pad_token_id),
-        dtype=torch.long,
-    )
-    schema_mask = torch.zeros_like(schema_ids)
-    role_mask = torch.zeros((len(rows), maximum_roles), dtype=torch.long)
-    for row_index, row in enumerate(rows):
-        definitions = [
-            str(entry["definition"]) for entry in row.get("schema_entries", [])
-        ]
-        encoded = tokenizer(
-            definitions,
-            add_special_tokens=False,
-            padding="max_length",
-            truncation=True,
-            max_length=maximum_definition_length,
-            return_tensors="pt",
-        )
-        role_count = len(definitions)
-        schema_ids[row_index, :role_count] = encoded["input_ids"]
-        schema_mask[row_index, :role_count] = encoded["attention_mask"]
-        role_mask[row_index, :role_count] = 1
-    return schema_ids, schema_mask, role_mask
 
 
 def load_runtime(
@@ -134,6 +75,10 @@ def generate_batch(
     minimum_new_tokens: int,
 ) -> list[dict[str, Any]]:
     """Generate and parse predictions for one batch."""
+    if not rows:
+        return []
+    if not 0 <= minimum_new_tokens <= maximum_new_tokens or maximum_new_tokens <= 0:
+        raise ValueError("Invalid generation length limits")
     encoded = tokenizer(
         [str(row["instruction"]) for row in rows],
         add_special_tokens=False,
@@ -141,10 +86,10 @@ def generate_batch(
         return_tensors="pt",
     )
     prompt_lengths = encoded["attention_mask"].sum(dim=1)
-    if int(prompt_lengths.max()) > maximum_prompt_length:
+    prefix_length = model.schema_mapper.latent_length if model.schema_mapper is not None else 0
+    if int(prompt_lengths.max()) + prefix_length + maximum_new_tokens > maximum_prompt_length:
         raise ValueError(
-            f"A prompt has {int(prompt_lengths.max())} tokens, exceeding "
-            f"the configured limit of {maximum_prompt_length}"
+            f"Prompt, latent prefix, and generation allowance exceed {maximum_prompt_length} tokens"
         )
 
     if model.schema_mapper is None:
@@ -162,21 +107,44 @@ def generate_batch(
         max_new_tokens=maximum_new_tokens,
         min_new_tokens=minimum_new_tokens,
         eos_token_id=tokenizer.eos_token_id,
+        use_cache=True,
     )
     responses = tokenizer.batch_decode(generated, skip_special_tokens=True)
     predictions: list[dict[str, Any]] = []
-    for row, response in zip(rows, responses):
-        labels = {str(entry["label"]) for entry in row.get("schema_entries", [])}
+    for row, response in zip(rows, responses, strict=False):
+        pairs, errors = parse_pairs(response)
+        annotations = ground_pairs(
+            pairs,
+            str(row["sentence"]),
+            token_offsets=row.get("token_offsets"),
+            dependency=row.get("protocol") == "dependency-srl",
+        )
+        # Copy input metadata explicitly; gold roles, senses, and events are not inference inputs.
+        context = {
+            key: row[key]
+            for key in ("sentence_id", "protocol", "tokens", "token_offsets", "predicate")
+            if key in row
+        }
+        if row.get("protocol") == "framenet":
+            context["meta_info"] = {
+                key: row.get("meta_info", {})[key]
+                for key in (
+                    "frame",
+                    "lexical_unit",
+                    "source_document",
+                    "native_sentence_id",
+                    "annotation_set_id",
+                )
+                if key in row.get("meta_info", {})
+            }
         predictions.append(
             {
+                **context,
                 "id": row.get("id"),
                 "sentence": row.get("sentence", ""),
-                "predicted_roles": parse_response(
-                    response,
-                    labels,
-                    str(row.get("sentence", "")),
-                ),
-                "gold_roles": row.get("roles", []),
+                "predicted_roles": pairs,
+                "predicted_annotations": annotations,
+                "parse_errors": errors,
                 "raw_output": response,
             }
         )
@@ -193,6 +161,8 @@ def run_inference(
     minimum_new_tokens: int,
 ) -> list[dict[str, Any]]:
     """Run deterministic batched inference over all rows."""
+    if batch_size <= 0:
+        raise ValueError("Batch size must be positive")
     outputs: list[dict[str, Any]] = []
     for start in range(0, len(rows), batch_size):
         outputs.extend(

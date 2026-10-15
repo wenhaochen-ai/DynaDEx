@@ -1,0 +1,155 @@
+[
+  {
+    "role": "Combination_Drug",
+    "def": [
+      "A concomitant medication administered alongside the primary treatment",
+      "Another drug used in combination with the main therapeutic agent",
+      "与主要治疗药物同时使用的伴随药物",
+      "在治疗过程中联合使用的其他药物成分"
+    ]
+  },
+  {
+    "role": "Treatment_Drug",
+    "def": [
+      "The name of the specific pharmaceutical substance or medication used",
+      "The active chemical agent or drug brand administered in the treatment",
+      "使用的特定药用物质或药物的名称",
+      "治疗中施用的活性化学制剂或药物品牌"
+    ]
+  },
+  {
+    "role": "Treatment_Dosage",
+    "def": [
+      "The specific amount or quantity of the drug administered",
+      "The defined strength or volume of the medication given to the subject",
+      "施用药物的具体数量或剂量",
+      "给予受试者的药物的规定强度或体积"
+    ]
+  },
+  {
+    "role": "Treatment_Duration",
+    "def": [
+      "The total length of time over which the treatment was administered",
+      "The time period defining how long the therapeutic course continued",
+      "进行治疗的总时长",
+      "定义疗程持续多久的时间段"
+    ]
+  },
+  {
+    "role": "Effect",
+    "def": [
+      "The clinical outcome, symptom, or adverse event resulting from the treatment",
+      "The observed medical reaction or phenomenon triggered by the intervention",
+      "由治疗产生的临床结果、症状或不良事件",
+      "由医疗干预引起的观察到的反应或医学现象"
+    ]
+  },
+  {
+    "role": "Treatment_Freq",
+    "def": [
+      "The frequency or rate at which the treatment is administered",
+      "How often the medication is taken or applied within a given period",
+      "施用治疗的频率或速率",
+      "在特定时期内服用或使用药物的频次"
+    ]
+  },
+  {
+    "role": "Treatment_Route",
+    "def": [
+      "The method or path by which the drug is introduced into the body",
+      "The mode of administration, such as oral, intravenous, or topical",
+      "药物被引入体内的途径或方法",
+      "给药方式，例如口服、静脉注射或局部给药"
+    ]
+  },
+  {
+    "role": "Subject_Age",
+    "def": [
+      "The specific age of the patient or subject involved in the event",
+      "A numerical or descriptive value indicating how old the subject is",
+      "涉及事件的患者或受试者的具体年龄",
+      "指示受试者年纪的数值或描述性值"
+    ]
+  },
+  {
+    "role": "Subject_Disorder",
+    "def": [
+      "A pre-existing medical condition or co-morbidity affecting the subject",
+      "An underlying illness or disorder the patient had separate from the treatment indication",
+      "影响受试者的既往医疗状况或合并症",
+      "患者除治疗适应症外患有的潜在疾病或失调"
+    ]
+  },
+  {
+    "role": "Subject_Gender",
+    "def": [
+      "The biological sex or gender identity of the subject",
+      "An indication of whether the patient is male or female",
+      "受试者的生物性别或性别认同",
+      "指示患者是男性还是女性的描述"
+    ]
+  },
+  {
+    "role": "Subject_Population",
+    "def": [
+      "A specific demographic group or population segment the subject belongs to",
+      "The wider group of people defined by shared characteristics (e.g., pediatric) to which the subject belongs",
+      "受试者所属的特定人口统计群体或人群细分",
+      "受试者所属的具有共同特征（如儿科人群）的广泛群体"
+    ]
+  },
+  {
+    "role": "Subject_Race",
+    "def": [
+      "The racial or ethnic background of the subject",
+      "A descriptor identifying the subject's race or ethnicity",
+      "受试者的种族或民族背景",
+      "用于标识受试者种族或族裔的描述符"
+    ]
+  },
+  {
+    "role": "Subject",
+    "def": [
+      "The patient or individual experiencing the medical event or adverse reaction",
+      "The primary entity undergoing treatment or suffering from a clinical condition",
+      "经历医疗事件或不良反应的患者或个体",
+      "正在接受治疗或患有某种临床状况的主要实体"
+    ]
+  },
+  {
+    "role": "Treatment_Disorder",
+    "def": [
+      "The medical condition or indication for which the treatment is prescribed",
+      "The target disease or symptom that the medication aims to treat",
+      "开具治疗处方所针对的医疗状况或适应症",
+      "药物旨在治疗的目标疾病或症状"
+    ]
+  },
+  {
+    "role": "Treatment_Time_elapsed",
+    "def": [
+      "The time interval between the administration of treatment and the onset of the effect",
+      "The duration elapsed from the start or end of therapy to the observation of the event",
+      "从施用治疗到效果开始显现之间的时间间隔",
+      "从疗法开始或结束到观察到事件所经过的持续时间"
+    ]
+  },
+  {
+    "role": "Trigger",
+    "def": [
+      "The specific word or phrase in the text that most clearly indicates the occurrence of a medical event.",
+      "A specific textual cue signaling the presence of an adverse drug reaction or a potential therapeutic effect.",
+      "最能明确指示医疗事件（如不良反应或治疗效果）发生的核心词或短语。",
+      "标志着药物不良反应或潜在治疗作用出现的关键提示词。"
+    ]
+  },
+  {
+    "role": "Treatment",
+    "def": [
+      "The medical intervention, procedure, or therapy administered to the subject",
+      "The comprehensive course of action taken to manage a health problem",
+      "施予受试者的医疗干预、程序或疗法",
+      "为管理健康问题而采取的综合行动方案"
+    ]
+  }
+]

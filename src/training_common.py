@@ -48,6 +48,11 @@ class GROTrainer(Trainer):
         self.gro_rho = gro_rho
         self.gro_alpha = gro_alpha
         self.gro_gamma = gro_gamma
+        self.model_accepts_loss_kwargs = False
+        if self.args.world_size != 1 or self.args.n_gpu > 1:
+            raise ValueError(
+                "GRO uses the single-GPU training configuration specified in the paper"
+            )
 
     def _batch_loss(
         self,
@@ -55,13 +60,7 @@ class GROTrainer(Trainer):
         inputs: dict[str, Any],
         num_items_in_batch: int | None,
     ) -> torch.Tensor:
-        if num_items_in_batch is None:
-            return self.compute_loss(model, inputs)
-        return self.compute_loss(
-            model,
-            inputs,
-            num_items_in_batch=num_items_in_batch,
-        )
+        return self.compute_loss(model, inputs)
 
     def training_step(
         self,
@@ -71,7 +70,16 @@ class GROTrainer(Trainer):
     ) -> torch.Tensor:
         model.train()
         inputs = self._prepare_inputs(inputs)
-        accumulation_steps = max(1, int(self.args.gradient_accumulation_steps))
+        accumulation_steps = max(
+            1,
+            int(
+                getattr(
+                    self,
+                    "current_gradient_accumulation_steps",
+                    self.args.gradient_accumulation_steps,
+                )
+            ),
+        )
         trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
 
         accumulated = [
@@ -81,68 +89,77 @@ class GROTrainer(Trainer):
         for parameter in trainable:
             parameter.grad = None
 
+        rng_before = torch.random.get_rng_state()
+        cuda_before = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
         with self.compute_loss_context_manager():
             loss = self._batch_loss(model, inputs, num_items_in_batch)
         if self.args.n_gpu > 1:
             loss = loss.mean()
-        self.accelerator.backward(loss / accumulation_steps)
+        # Obtain the unnormalized batch gradient; normalize once after mixing.
+        backward_scale = self.accelerator.gradient_accumulation_steps
+        self.accelerator.backward(loss * backward_scale)
+        rng_after = torch.random.get_rng_state()
+        cuda_after = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
 
         active = [parameter for parameter in trainable if parameter.grad is not None]
         original_gradients = [parameter.grad.detach().clone() for parameter in active]
         if not active:
-            return loss.detach()
+            for parameter, previous in zip(trainable, accumulated, strict=False):
+                parameter.grad = previous
+            return loss.detach() / accumulation_steps
 
+        scaler = self.accelerator.scaler
+        loss_scale = scaler.get_scale() if scaler is not None else 1.0
         gradient_norm = torch.linalg.vector_norm(
-            torch.stack([gradient.norm(2) for gradient in original_gradients]),
+            torch.stack(
+                [(gradient.float() / loss_scale).norm(2) for gradient in original_gradients]
+            ),
             ord=2,
         )
         scale = self.gro_rho / (gradient_norm + self.gro_gamma)
-        with torch.no_grad():
-            for parameter, gradient in zip(active, original_gradients):
-                parameter.add_(gradient, alpha=float(scale))
-                parameter.grad = None
-
+        original_parameters = [parameter.detach().clone() for parameter in active]
         try:
+            with torch.no_grad():
+                for parameter, gradient in zip(active, original_gradients, strict=False):
+                    parameter.add_(
+                        (gradient.float() / loss_scale).to(parameter.dtype), alpha=float(scale)
+                    )
+                    parameter.grad = None
+            # Reuse the same dropout realization for both evaluations of the batch.
+            torch.random.set_rng_state(rng_before)
+            if cuda_before is not None:
+                torch.cuda.set_rng_state_all(cuda_before)
             with self.compute_loss_context_manager():
                 perturbed_loss = self._batch_loss(model, inputs, num_items_in_batch)
             if self.args.n_gpu > 1:
                 perturbed_loss = perturbed_loss.mean()
-            self.accelerator.backward(perturbed_loss / accumulation_steps)
+            self.accelerator.backward(perturbed_loss * backward_scale)
             lookahead_gradients = [
                 parameter.grad.detach().clone()
                 if parameter.grad is not None
                 else torch.zeros_like(original)
-                for parameter, original in zip(active, original_gradients)
+                for parameter, original in zip(active, original_gradients, strict=False)
             ]
         finally:
             with torch.no_grad():
-                for parameter, gradient in zip(active, original_gradients):
-                    parameter.sub_(gradient, alpha=float(scale))
-
-        dot_product = sum(
-            (original * lookahead).sum()
-            for original, lookahead in zip(original_gradients, lookahead_gradients)
-        )
-        if float(dot_product) < 0:
-            original_norm_sq = sum((gradient * gradient).sum() for gradient in original_gradients)
-            projection = dot_product / (original_norm_sq + self.gro_gamma)
-            lookahead_gradients = [
-                lookahead - projection * original
-                for original, lookahead in zip(original_gradients, lookahead_gradients)
-            ]
+                for parameter, original_parameter in zip(active, original_parameters, strict=False):
+                    parameter.copy_(original_parameter)
+            torch.random.set_rng_state(rng_after)
+            if cuda_after is not None:
+                torch.cuda.set_rng_state_all(cuda_after)
 
         for parameter, original, lookahead in zip(
-            active, original_gradients, lookahead_gradients
+            active, original_gradients, lookahead_gradients, strict=False
         ):
             parameter.grad = (
                 (1.0 - self.gro_alpha) * original + self.gro_alpha * lookahead
-            )
+            ) / accumulation_steps
 
-        for parameter, previous in zip(trainable, accumulated):
+        for parameter, previous in zip(trainable, accumulated, strict=False):
             if previous is None:
                 continue
             if parameter.grad is None:
                 parameter.grad = previous
             else:
                 parameter.grad.add_(previous)
-        return loss.detach()
+        return loss.detach() / accumulation_steps
